@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
 import com.example.expenses.data.ContactDataBase
 import com.example.expenses.data.DATABASE_NAME
@@ -31,19 +32,17 @@ class ShowActivity : AppCompatActivity() {
         contList.clear()
         typesList.clear()
         db?.contactDAO()?.getAllJob()?.observe(this, androidx.lifecycle.Observer {
-            runOnUiThread(Runnable{
-                kotlin.run {
+
                     typesList.addAll(it)
-                }
-            })
+
         })
         db?.contactDAO()?.getAllContact()?.observe(this, androidx.lifecycle.Observer {
-            kotlin.run {
+
                 contList.addAll(it)
                 getRecycleView()
                 //updateRecycle()
-            }
-            getRecycleView()
+
+
         })
 
     }
@@ -67,6 +66,7 @@ class ShowActivity : AppCompatActivity() {
         }
         val adapter = ContactRVAdapter(this, contList, typesList)
         adapter.setClickListener(rvListener)
+        b.recycler.layoutManager=LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false)
         b.recycler.adapter = adapter
 
     }

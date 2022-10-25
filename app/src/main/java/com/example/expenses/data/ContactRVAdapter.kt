@@ -25,10 +25,9 @@ class ContactRVAdapter(context: Context?,
 
     override fun onBindViewHolder(holder: ContactViewHolder, position: Int) {
         val item = data[position]
-        val itemType = dataTypes[position]
         holder.name.text = item.nameContact
         holder.number.text = item.numberContact.toString()
-        holder.job.text = itemType.typesJob
+
     }
 
     override fun getItemCount(): Int = data.size

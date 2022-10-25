@@ -15,7 +15,8 @@ import java.util.*
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
-
+    var jobTypeCon: Boolean = true
+    var jobType: Boolean = true
     private var pos: Int = -1
     private var expId: UUID? = null
     private var typeExpId: UUID? = null
@@ -36,7 +37,7 @@ class MainActivity : AppCompatActivity() {
         val uuidTypeText = intent.getStringExtra("uuidType")
         converterUUID(uuidText, uuidTypeText)
         getContact()
-        //selectEditText()
+        selectEditText()
         binding.addButton.setOnClickListener{
             if (pos == -1) {
                 binding.addButton.text = "Добавить"
@@ -46,13 +47,15 @@ class MainActivity : AppCompatActivity() {
                     addExpenses(binding.editTextName.text.toString(),
                         binding.editTextCost.text.toString().toInt(),
                         binding.editTextDesc.text.toString())
-                    Toast.makeText(this, "Добавили", Toast.LENGTH_SHORT).show()
+                    jobType=false
+                    jobTypeCon=false
+
                 }
                 else {
                     Toast.makeText(this, "Нельзя добавить пустую строку", Toast.LENGTH_SHORT).show()
                 }
             }
-            else{
+            else if(pos>-1){
                 if (binding.editTextName.text.toString() != ""
                     && binding.editTextCost.text.toString() != ""
                     && binding.editTextDesc.text.toString() != ""){
@@ -104,14 +107,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /*private fun selectEditText(){
+    private fun selectEditText(){
         if(pos > -1){
             binding.addButton.text = "Изменить"
             binding.delete.visibility = View.VISIBLE
             binding.delete.isEnabled = true
             executor.execute {
                 val expenses = db?.contactDAO()?.getContact(expId!!)
-                val typeName = db?.contactDAO()?.getTypeJobName(typeExpId!!)
+                val typeName = db?.contactDAO()?.getTypeContactName(typeExpId!!)
 
                 runOnUiThread(Runnable {
                     kotlin.run {
@@ -128,38 +131,40 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-    }*/
+    }
     private fun getContact() {
         conList.clear()
         jobTypeList.clear()
         db?.contactDAO()?.getAllJob()?.observe(this, androidx.lifecycle.Observer {
-            runOnUiThread(Runnable{
-                kotlin.run {
                     jobTypeList.addAll(it)
-                }
-            })
-
         })
         db?.contactDAO()?.getAllContact()?.observe(this, androidx.lifecycle.Observer {
-            runOnUiThread(Runnable{
-                kotlin.run {
-
                     conList.addAll(it)
-                }
-            })
         })
     }
-
+    override fun onResume() {
+        super.onResume()
+        jobType  = false
+        jobTypeCon  = false
+        getContact()
+    }
     private fun addExpenses(name: String, cost: Int, nameType:String)
-    {
-        var jobTypeCon: Boolean = true
-        val uuidType = UUID.randomUUID()
-        jobTypeList.forEach{
-            if (it.typesJob == binding.editTextDesc.text.toString()){
-                jobTypeCon = false
+    {val uuidType = UUID.randomUUID()
+        val Jods = JobsTypes(uuidType, nameType)
+        val con=Contacts(UUID.randomUUID(), name, cost,uuidType)
+
+        conList.forEach(){
+            if (it.nameContact==con.nameContact){
+                jobType=true
             }
         }
-        if(jobTypeCon) {
+
+        jobTypeList.forEach{
+            if (it.typesJob == Jods.typesJob){
+                jobTypeCon = true
+            }
+        }
+        if(!jobTypeCon&&!jobType) {
             executor.execute {
                 db?.contactDAO()?.addTypeJob(
                     JobsTypes(uuidType, nameType)
@@ -168,13 +173,12 @@ class MainActivity : AppCompatActivity() {
                     Contacts(UUID.randomUUID(), name, cost, uuidType)
                 )
             }
-        }else if(!jobTypeCon){
-            Executors.newSingleThreadExecutor().execute{
-                val uuid = db?.contactDAO()?.getTypeJobName(nameType)
-                val  con= uuid?.let { Contacts(uuidType,name,cost,uuidType) }
-                if(con !=null) {
-                    db?.contactDAO()?.addContact(con)
-                }
+        }else if(!jobTypeCon&&jobType){
+            executor.execute {
+                val uuid=db?.contactDAO()?.getTypeJobName(nameType)
+                db?.contactDAO()?.addContact(
+                    Contacts(UUID.randomUUID(),name,cost,uuid!!)
+                )
             }
         }
         else

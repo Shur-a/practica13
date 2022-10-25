@@ -10,8 +10,12 @@ import java.util.*
 interface ContactDAO {
     @Query("SELECT * FROM $JOB_TABLE")
     fun getAllJob(): LiveData<MutableList<JobsTypes>>
+    @Query("SELECT typesJob FROM $JOB_TABLE WHERE  uuid =:id")
+    fun getTypeContactName(id: UUID):String
     @Query("SELECT uuid FROM $JOB_TABLE WHERE  typesJob =:id")
     fun getTypeJobName(id: String): UUID
+    @Query("SELECT typesJob FROM $JOB_TABLE")
+    fun getTypeString():LiveData<MutableList<String>>
     @Update
     fun updateTypeJob (type: JobsTypes)
     @Insert
